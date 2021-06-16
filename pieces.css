@@ -1,0 +1,31 @@
+#board .piece.white.multiplex {
+	background-image: url('images/white_circle.svg');
+}
+#board .piece.black.multiplex {
+	background-image: url('images/black_circle.svg');
+}
+#board .piece.white.superparticularis {
+	background-image: url('images/white_triangle.svg');
+}
+#board .piece.black.superparticularis {
+	background-image: url('images/black_triangle.svg');
+}
+#board .piece.white.superpartiens {
+	background-image: url('images/white_square.svg');
+}
+#board .piece.black.superpartiens {
+	background-image: url('images/black_square.svg');
+}
+#board .piece.white.pyramid {
+	background-image: url('images/white_pyramid.svg');
+}
+#board .piece.black.pyramid {
+	background-image: url('images/black_pyramid.svg');
+}
+
+#board .piece.white {
+	color: black;
+}
+#board .piece.black {
+	color: white;
+}

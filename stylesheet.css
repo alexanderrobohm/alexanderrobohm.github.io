@@ -1,0 +1,138 @@
+#board {
+	background-color: transparent;
+	width: 250px;
+	height: 95%;
+	overflow: hidden;
+	position: absolute;
+	top: 50%;
+    left: 50%;
+	margin-right: -50%;
+	transform: translate(-50%, -50%);
+	cursor: pointer;
+	font-family: times, serif;
+}
+
+#board ::selection {
+	background-color: transparent;
+}
+
+#board .tile {
+	z-index: 90;
+}
+#board .dark-tile {
+	background-color: #b58863;
+}
+#board .light-tile {
+	background-color: #f0d9B5;
+}
+#board .coord-tile {
+	display: grid;
+	overflow: auto;
+	grid-template-rows: repeat(4, 4fr);
+	grid-template-columns: repeat(4, 4fr);
+	justify-content: right;
+}
+
+#board .light-tile .coord {
+	color: #b58863;
+}
+#board .dark-tile .coord {
+	color: #f0d9B5;
+}
+
+#board .coord-tile .coord-rank {
+	grid-row: 1;
+	grid-column: 4;
+	margin-left: 10px;
+	margin-right: 2px;
+}
+#board .coord-tile .coord-file {
+	grid-row: 4;
+	grid-column: 1;
+	margin-left: 2px;
+}
+#board .coord-tile .coord {
+	user-select: none;
+}
+
+#board .piece {
+	position: absolute;
+	z-index: 97;
+	background-size: contain;
+	background-repeat: no-repeat;
+	text-align: center;
+	user-select: none;
+	-moz-user-select: none;
+}
+#board .piece p {
+	height: 0px;
+}
+
+#board .piece.ghost {
+	z-index:99;
+	pointer-events: none;
+}
+
+#board .square.move-dest {
+	position: absolute;
+	z-index: 99;
+	background: radial-gradient(rgba(20,85,30,0.5) 19%, rgba(0,0,0,0) 20%);
+	background-color: rgba(0, 0, 0, 0);
+	background-position-x: 0%;
+	background-position-y: 0%;
+	background-repeat: repeat;
+	background-attachment: scroll;
+	background-image: radial-gradient(rgba(20, 85, 30, 0.5) 19%, rgba(0, 0, 0, 0) 20%);
+	background-size: auto;
+	background-origin: padding-box;
+	background-clip: border-box;
+	pointer-events:auto;
+}
+#board .square.select {
+	position: absolute;
+	background-color: rgba(20,85,30,0.5);
+}
+#board .square.last-move {
+	position: absolute;
+	z-index: 95;
+	background-color: rgba(155,199,0,0.41);
+}
+#board .square.move-dest-c {
+	position: absolute;
+	z-index: 99;
+	background: radial-gradient(transparent 0%, transparent 79%, rgba(20,85,0,0.3) 80%);
+	background-color: rgba(0, 0, 0, 0);
+	background-position-x: 0%;
+	background-position-y: 0%;
+	background-repeat: repeat;
+	background-attachment: scroll;
+	background-image: radial-gradient(transparent 0%, transparent 79%, rgba(20, 85, 0, 0.3) 80%);
+	background-size: auto;
+	background-origin: padding-box;
+	background-clip: border-box;
+	pointer-events:auto;
+}
+#board .move-dest:hover {
+	background: rgba(20,85,30,0.3);
+	background-color: rgba(20, 85, 30, 0.3);
+	background-position-x: 0%;
+	background-position-y: 0%;
+	background-repeat: repeat;
+	background-attachment: scroll;
+	background-image: none;
+	background-size: auto;
+	background-origin: padding-box;
+	background-clip: border-box;
+}
+#board .move-dest-c:hover {
+	background: rgba(20,85,30,0.3);
+	background-color: rgba(20, 85, 30, 0.3);
+	background-position-x: 0%;
+	background-position-y: 0%;
+	background-repeat: repeat;
+	background-attachment: scroll;
+	background-image: none;
+	background-size: auto;
+	background-origin: padding-box;
+	background-clip: border-box;
+}
