@@ -64,18 +64,18 @@
 	user-select: none;
 	-moz-user-select: none;
 }
-#board .piece p {
-	height: 0px;
+#board .piece.dragged {
+	z-index: 99;
+	pointer-events: none;
 }
 
 #board .piece.ghost {
-	z-index:99;
-	pointer-events: none;
+	z-index:95;
 }
 
 #board .square.move-dest {
 	position: absolute;
-	z-index: 99;
+	z-index: 98;
 	background: radial-gradient(rgba(20,85,30,0.5) 19%, rgba(0,0,0,0) 20%);
 	background-color: rgba(0, 0, 0, 0);
 	background-position-x: 0%;
@@ -90,6 +90,7 @@
 }
 #board .square.select {
 	position: absolute;
+	z-index: 96;
 	background-color: rgba(20,85,30,0.5);
 }
 #board .square.last-move {
@@ -99,7 +100,7 @@
 }
 #board .square.move-dest-c {
 	position: absolute;
-	z-index: 99;
+	z-index: 98;
 	background: radial-gradient(transparent 0%, transparent 79%, rgba(20,85,0,0.3) 80%);
 	background-color: rgba(0, 0, 0, 0);
 	background-position-x: 0%;

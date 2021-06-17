@@ -146,10 +146,59 @@ function placeSquare(square, position) {
 	square.setAttribute("position", position)
 }
 
+function placeMoveDestSquares(positions) {
+	destroyMoveDestSquares()
+	positions.forEach(p => {
+		piece = getPieceAtPosition(p)
+		lastMoveSquare1 = b.getElementsByClassName("last-move")[0]
+		lastMoveSquare1 = b.getElementsByClassName("last-move")[1]
+		lastMoveSquare1Position = parseInt(lastMoveSquare1.getAttribute("position"))
+		lastMoveSquare2Position = parseInt(lastMoveSquare1.getAttribute("position"))
+		
+		s = null
+		if (p == lastMoveSquare1Position) {
+			s = lastMoveSquare1
+		} else if (p == lastMoveSquare2Position) {
+			s = lastMoveSquare2
+		} else {
+			s = document.createElement("div")
+			s.classList.add("square")
+			b.appendChild(s)
+		}
+		
+		s.classList.add(!piece ? "move-dest" : "move-dest-c")
+		placeSquare(s, p)
+	})
+}
+
+function destroyMoveDestSquares() {
+	while (b.getElementsByClassName("move-dest").length > 0) {
+		moveDestSquares = b.getElementsByClassName("move-dest")
+		Array.prototype.forEach.call(moveDestSquares, p => {
+			if (p.classList.contains("last-move")) {
+				p.classList.remove("move-dest")
+			} else { 
+				p.parentNode.removeChild(p)
+			}
+		})
+	}
+	while (b.getElementsByClassName("move-dest-c").length > 0) {
+		moveDestSquares = b.getElementsByClassName("move-dest-c")
+		Array.prototype.forEach.call(moveDestSquares, p => {
+			if (p.classList.contains("last-move")) {
+				p.classList.remove("move-dest-c")
+			} else { 
+				p.parentNode.removeChild(p)
+			}
+		})
+	}
+}
+
 function deselect() {
 	selectionSquare = b.getElementsByClassName("select")[0]
 	placeSquare(selectionSquare, -1)
 	selectionSquare.classList.remove("selected")
+	destroyMoveDestSquares()
 }
 
 // From https://stackoverflow.com/questions/1517924/javascript-mapping-touch-events-to-mouse-events
@@ -180,51 +229,61 @@ function touchHandler(event)
 }
 
 function mouseDown(event) {
-	// Left click
 	ghostPiece = b.getElementsByClassName("ghost")[0]
 	
 	if (!ghostPiece) { return; }
 	dragging = ghostPiece.getAttribute("position") !== "-1"
 	
+	// Left click
 	if (!dragging && (event.button == 0)) {
 		// Drag a piece
 		if (event.target.classList.contains("piece")
 				&& (event.target.classList.contains(playerToMove == 0 ? "white" : "black"))) {
-			draggedPiece = event.target			
+			draggedPiece = event.target
 			draggedFrom = parseInt(draggedPiece.getAttribute("position"))
 			
-			ghostPiece.style.left = draggedPiece.offsetLeft
-			ghostPiece.style.top = draggedPiece.offsetTop
-			ghostPiece.style.width = draggedPiece.offsetWidth
-			ghostPiece.style.height = draggedPiece.offsetHeight
-			ghostPiece.style.visibility = "visible"
 			ghostPiece.style.backgroundImage = getComputedStyle(draggedPiece).getPropertyValue("background-image")
 			ghostPiece.style.fontSize = getComputedStyle(draggedPiece).getPropertyValue("font-size")
 			ghostPiece.style.lineHeight = getComputedStyle(draggedPiece).getPropertyValue("line-height")
 			ghostPiece.style.color = getComputedStyle(draggedPiece).getPropertyValue("color")
 			ghostPiece.innerText = draggedPiece.innerText
-			
-			b.getElementsByClassName("select")[0].style.zIndex = 98
-			placeSquare(b.getElementsByClassName("select")[0], draggedFrom)
-			
 			ghostPiece.setAttribute("position", draggedFrom)
+			resizePiece(ghostPiece)
+			
+			draggedPiece.classList.add("dragged")
+			
+			selectionSquare = b.getElementsByClassName("select")[0]
+			if (parseInt(selectionSquare.getAttribute("position")) != draggedFrom) {
+				deselect()
+			}
+			placeSquare(selectionSquare, draggedFrom)
+			placeMoveDestSquares(getLegalMoves(draggedFrom))
+			
 		} else {
+			if (event.target.classList.contains("move-dest") || event.target.classList.contains("move-dest-c")) {
+				selectionSquare = b.getElementsByClassName("selected")[0]
+				if (selectionSquare) {
+					selectPosition = parseInt(selectionSquare.getAttribute("position"))
+					moveDestPosition = parseInt(event.target.getAttribute("position"))
+					
+					placeSquare(b.getElementsByClassName("last-move")[0], selectPosition)
+					placeSquare(b.getElementsByClassName("last-move")[1], moveDestPosition)
+					executeMove(selectPosition, moveDestPosition)
+				}
+			}
 			deselect()
 		}
 	}
 	
 	// Right click to cancel
 	if (dragging && (event.button == 2)) {
-		ghostPiece.style.visibility = "hidden"
-		ghostPiece.style.width = 0
-		ghostPiece.style.height = 0
-		ghostPiece.style.top = 0
-		ghostPiece.style.left = 0
-		b.getElementsByClassName("select")[0].style.zIndex = 96
-		
 		deselect()
 		
+		draggedPiece = event.target
+		draggedPiece.classList.remove("dragged")
+		resizePiece(draggedPiece)
 		ghostPiece.setAttribute("position", -1)
+		resizePiece(ghostPiece)
 	}
 	
 	mouseMove(event);
@@ -237,19 +296,21 @@ function mouseMove(event) {
 	
 	if (ghostPiece.getAttribute("position") !== "-1") {
 		// Let ghost piece follow the cursor and stay within bound of board
-		xPos = event.clientX - b.getBoundingClientRect().left - ghostPiece.clientWidth / 2
-		yPos = event.clientY - b.getBoundingClientRect().top - ghostPiece.clientHeight / 2
+		draggedPiece = b.getElementsByClassName("dragged")[0]
 		
-		maxX = b.getBoundingClientRect().width - ghostPiece.clientWidth
-		maxY = b.getBoundingClientRect().height - ghostPiece.clientHeight
+		xPos = event.clientX - b.getBoundingClientRect().left - draggedPiece.clientWidth / 2
+		yPos = event.clientY - b.getBoundingClientRect().top - draggedPiece.clientHeight / 2
+		
+		maxX = b.getBoundingClientRect().width - draggedPiece.clientWidth
+		maxY = b.getBoundingClientRect().height - draggedPiece.clientHeight
 		
 		xPos = xPos < 0 ? 0 : xPos
 		yPos = yPos < 0 ? 0 : yPos
 		xPos = xPos > maxX ? maxX : xPos
 		yPos = yPos > maxY ? maxY : yPos
 		
-		ghostPiece.style.left = xPos
-		ghostPiece.style.top = yPos
+		draggedPiece.style.left = xPos
+		draggedPiece.style.top = yPos
 	}
 }
 
@@ -261,18 +322,19 @@ function mouseUp(event) {
 	// Snap piece to grid when let go
 	if ((event.button == 0) && (ghostPiece.getAttribute("position") !== "-1")) {
 		draggedFrom = parseInt(ghostPiece.getAttribute("position"))
-		
-		tileX = Math.floor((ghostPiece.offsetLeft + ghostPiece.offsetWidth / 2) / b.getBoundingClientRect().width * boardWidth)
-		tileY = Math.floor((ghostPiece.offsetTop + ghostPiece.offsetHeight / 2) / b.getBoundingClientRect().height * boardHeight)
+		draggedPiece = getPieceAtPosition(draggedFrom)
+				
+		tileX = Math.floor((draggedPiece.offsetLeft + draggedPiece.offsetWidth / 2) / b.getBoundingClientRect().width * boardWidth)
+		tileY = Math.floor((draggedPiece.offsetTop + draggedPiece.offsetHeight / 2) / b.getBoundingClientRect().height * boardHeight)
 		
 		tileIndex = boardWidth * tileY + tileX
 		
 		if (tileIndex != draggedFrom) {
-			if (moveIsLegal(draggedFrom, tileIndex)) {
-				executeMove(draggedFrom, tileIndex)
+			if (getLegalMoves(draggedFrom).includes(tileIndex)) {
 				placeSquare(b.getElementsByClassName("last-move")[0], draggedFrom)
 				placeSquare(b.getElementsByClassName("last-move")[1], tileIndex)
-			}			
+				executeMove(draggedFrom, tileIndex)
+			}
 			
 			deselect()
 		} else {
@@ -284,30 +346,39 @@ function mouseUp(event) {
 			}
 		}
 		
-		ghostPiece.style.visibility = "hidden"
+		draggedPiece.classList.remove("dragged")
 		ghostPiece.setAttribute("position", -1)
-		b.getElementsByClassName("select")[0].style.zIndex = 96
+		resizePiece(ghostPiece)
+		resizePiece(draggedPiece)
 	}
 }
 
 function resizePiece(p) {
 	i = parseInt(p.getAttribute("position"))
-	if (i < 0) { return; }
-	
-	t = b.getElementsByClassName("tile")[i]
-	p.style.left = t.offsetLeft
-	p.style.top = t.offsetTop
-	p.style.width = t.offsetWidth
-	p.style.height = t.offsetHeight
-	p.style.fontSize = t.offsetHeight * 0.35 + "px"
-	if (p.classList.contains("superparticularis")) {
-		p.style.lineHeight = t.offsetHeight * 1.25 + "px"
-		p.style.fontSize = t.offsetHeight * 0.30 + "px"
-	} else if (p.classList.contains("pyramid")) {
-		p.style.lineHeight = t.offsetHeight * 1.15 + "px"
-		p.style.fontSize = t.offsetHeight * 0.30 + "px"
+	if (i < 0) {
+		p.style.left = 0
+		p.style.top = 0
+		p.style.width = 0
+		p.style.height = 0
+		p.style.visibility = "hidden"
 	} else {
-		p.style.lineHeight = t.offsetHeight + "px"
+		t = b.getElementsByClassName("tile")[i]
+		p.style.left = t.offsetLeft
+		p.style.top = t.offsetTop
+		p.style.width = t.offsetWidth
+		p.style.height = t.offsetHeight
+		p.style.visibility = "visible"
+			
+		if (p.classList.contains("superparticularis")) {
+			p.style.lineHeight = t.offsetHeight * 1.25 + "px"
+			p.style.fontSize = t.offsetHeight * 0.30 + "px"
+		} else if (p.classList.contains("pyramid")) {
+			p.style.lineHeight = t.offsetHeight * 1.15 + "px"
+			p.style.fontSize = t.offsetHeight * 0.30 + "px"
+		} else if (!p.classList.contains("ghost")) {
+			p.style.lineHeight = t.offsetHeight + "px"
+			p.style.fontSize = t.offsetHeight * 0.35 + "px"
+		}
 	}
 }
 

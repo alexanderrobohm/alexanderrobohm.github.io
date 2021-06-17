@@ -3,22 +3,28 @@ boardHeight = 16
 
 playerToMove = 0
 
+whiteBase = 36
+blackBase = 64
+
 // Notation: 
 // Uppercase = White, Lowercase = black
 // m = multiplex. t = superparticularis (triangle), s = superpartiens, p = pyramid
 // /n = n empty squares
 // left to, right, top to bottom (like FEN)
-startingPosition = "S289S169/4S81S25S153P91T49T42T20T25S45S15T81T72M64M36M16M4T6T9/2M8M6M4M2/68m9m7m5m3/2t100t90m81m49m25m9t12t16p190s120t64t56t30t36s66s28s361s225/4s121s49 w"
+// Then, seperated by spaces: white base, black base, player to move
+startingPosition = "S289S169/4S81S25S153P91T49T42T20T25S45S15T81T72M64M36M16M4T6T9/2M8M6M4M2/68m9m7m5m3/2t100t90m81m49m25m9t12t16p190s120t64t56t30t36s66s28s361s225/4s121s49 36 64 w"
 
 positionColors = new Array(boardWidth * boardHeight)
 positionTypes = new Array(boardWidth * boardHeight)
 positionNumbers = new Array(boardWidth * boardHeight)
 
-function moveIsLegal(fromTile, toTile) {
-	return getPieceAtPosition(toTile) == null;
-}
-
 function executeMove(fromTile, toTile) {
+	// Check for Capture
+	if (positionNumbers[toTile] != 0) {
+		capturedPiece = getPieceAtPosition(toTile)
+		capturedPiece.parentNode.removeChild(capturedPiece)
+	}
+	
 	movedPiece = getPieceAtPosition(fromTile)
 	movedPiece.setAttribute("position", toTile)
 	resizePiece(movedPiece)
@@ -45,7 +51,9 @@ function setupPieces(positionString) {
 }
 
 function getPositionFromString(s) {
-	playerToMove = s.split(" ")[1] === "w" ? 0 : 1
+	playerToMove = s.split(" ")[3] === "w" ? 0 : 1
+	whiteBase = parseInt(s.split(" ")[1])
+	blackBase = parseInt(s.split(" ")[2])
 	
 	types = s.split(" ")[0].split(/([a-zA-Z\/])\d+/).filter(Boolean)
 	numbers = s.split(" ")[0].split(/[a-zA-Z\/](\d+)/).filter(Boolean)
@@ -137,19 +145,80 @@ function getStringFromPosition() {
 		}
 	}
 	
-	retval = retval + (playerToMove == 0 ? " w" : " b")
+	retval = retval + " " + whiteBase + " " + blackBase + (playerToMove == 0 ? " w" : " b")
 	return retval;
 }
 
 function getLegalMoves(fromTile) {
+	legalMoves = new Array()
+	switch (positionTypes[fromTile]) {
+		case "multiplex":
+			legalMoves = getLegalMovesOfDistance(fromTile, 1)
+			break;
+		case "superparticularis":
+			legalMoves = getLegalMovesOfDistance(fromTile, 2)
+			break;
+		case "superpartiens":
+			legalMoves = getLegalMovesOfDistance(fromTile, 3)
+			break;
+		case "pyramid":
+			getLegalMovesOfDistance(fromTile, 1).forEach(p => { if (!legalMoves.includes(p)) { legalMoves.push(p) } })
+			getLegalMovesOfDistance(fromTile, 2).forEach(p => { if (!legalMoves.includes(p)) { legalMoves.push(p) } })
+			getLegalMovesOfDistance(fromTile, 3).forEach(p => { if (!legalMoves.includes(p)) { legalMoves.push(p) } })
+			break;
+	}
+	return legalMoves
+}
+
+function getLegalMovesOfDistance(fromTile, distance) {
+	previousTiles = new Array()
+	currentTiles = new Array()
+	nextTiles = new Array()
+	
+	currentTiles.push(fromTile)
+	
+	for (i = distance-1; i >= 0; i--) {
+		// Get next tiles
+		currentTiles.forEach(ct => {
+			// Only new, unvisited tiles
+			getAdjacentTiles(ct).filter(at => { return !currentTiles.includes(at) && !previousTiles.includes(at) }).forEach(at => {
+				// Filter out occupied tiles unless it is the last iteration
+				if ((positionNumbers[at] == 0) || (i == 0)) {
+					nextTiles.push(at)
+				}
+			})
+		})
+		// Add current tiles onto previous tiles
+		currentTiles.forEach(ct => { if (!previousTiles.includes(ct)) { previousTiles.push(ct) } })
+		// Move next tiles to current tiles
+		currentTiles = new Array()
+		nextTiles.forEach(nt => { if (!currentTiles.includes(nt)) { currentTiles.push(nt) } })
+		nextTiles = new Array()
+	}
+	
+	// Only allow capture of piece of different color and same value
+	return currentTiles.filter(p => {
+			isCapture = (positionNumbers[p] != 0)
+			isSelfCapture = (positionColors[p] === ((playerToMove == 0) ? "white" : "black"))
+			isEqualValue = (positionNumbers[p] == positionNumbers[fromTile])
+			if (positionTypes[p] === "pyramid") {
+				// Capture the base of the pyramid
+				isEqualValue = isEqualValue || (positionNumbers[fromTile] == ((positionColors[p] === "white") ? whiteBase : blackBase))
+			}
+			
+			return !isCapture || (isEqualValue && !isSelfCapture)
+	})
+}
+
+function getAdjacentTiles(fromTile) {
 	retval = new Array()
-	retval.push(4)
-	retval.push(12)
-	retval.push(20)
-	retval.push(28)
-	retval.push(36)
-	retval.push(44)
-	retval.push(52)
+	
+	x = fromTile % 8
+	y = Math.floor(fromTile / 8)
+	if (y > 0) {retval.push(fromTile - boardWidth) } // Up
+	if (y < boardHeight-1) {retval.push(fromTile + boardWidth) } // Down
+	if (x > 0) {retval.push(fromTile - 1)} // Left
+	if (x < boardWidth-1) {retval.push(fromTile + 1)} // Right
 	
 	return retval;
 }
