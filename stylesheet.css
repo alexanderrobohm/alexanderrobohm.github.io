@@ -10,6 +10,7 @@
 	transform: translate(-50%, -50%);
 	cursor: pointer;
 	font-family: times, serif;
+	z-index: 80;
 }
 
 #board ::selection {
@@ -19,12 +20,15 @@
 #board .tile {
 	z-index: 90;
 }
+
 #board .dark-tile {
 	background-color: #b58863;
 }
+
 #board .light-tile {
 	background-color: #f0d9B5;
 }
+
 #board .coord-tile {
 	display: grid;
 	overflow: auto;
@@ -36,6 +40,7 @@
 #board .light-tile .coord {
 	color: #b58863;
 }
+
 #board .dark-tile .coord {
 	color: #f0d9B5;
 }
@@ -46,11 +51,13 @@
 	margin-left: 10px;
 	margin-right: 2px;
 }
+
 #board .coord-tile .coord-file {
 	grid-row: 4;
 	grid-column: 1;
 	margin-left: 2px;
 }
+
 #board .coord-tile .coord {
 	user-select: none;
 }
@@ -64,6 +71,7 @@
 	user-select: none;
 	-moz-user-select: none;
 }
+
 #board .piece.dragged {
 	z-index: 99;
 	pointer-events: none;
@@ -88,16 +96,19 @@
 	background-clip: border-box;
 	pointer-events:auto;
 }
+
 #board .square.select {
 	position: absolute;
 	z-index: 96;
 	background-color: rgba(20,85,30,0.5);
 }
+
 #board .square.last-move {
 	position: absolute;
 	z-index: 95;
 	background-color: rgba(155,199,0,0.41);
 }
+
 #board .square.move-dest-c {
 	position: absolute;
 	z-index: 98;
@@ -136,4 +147,11 @@
 	background-size: auto;
 	background-origin: padding-box;
 	background-clip: border-box;
+}
+
+#board .square.victory {
+	position: absolute;
+	z-index: 100;
+	background: radial-gradient(ellipse at center, red 0%, #e70000 25%, rgba(169,0,0,0) 89%, rgba(158,0,0,0) 100%);
+	opacity: 60%;
 }
